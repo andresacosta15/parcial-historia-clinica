@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: 'jdbc:postgresql://hapi-db:5432/hapi'
+    url: 'jdbc:postgresql://hapi-db-sincelejo:5432/hapi_sincelejo'
     username: 'admin'
     password: 'admin'
     driverClassName: 'org.postgresql.Driver'

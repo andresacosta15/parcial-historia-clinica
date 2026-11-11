@@ -1,38 +1,113 @@
 services:
-  hapi-db:
+  # ========== SEDE SINCELEJO ==========
+  hapi-db-sincelejo:
     image: postgres:14
-    container_name: hapi-db
+    container_name: hapi-db-sincelejo
     environment:
-      POSTGRES_DB: hapi
+      POSTGRES_DB: hapi_sincelejo
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
     volumes:
-      - hapi-db-data:/var/lib/postgresql/data
+      - hapi-db-sincelejo-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d hapi"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d hapi_sincelejo"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - clinica-net
+    networks: [clinica-net]
 
-  hapi-fhir:
-    image: hapiproject/hapi:latest
-    container_name: hapi-fhir
+  hapi-fhir-sincelejo:
+    image: hapiproject/hapi:v5.5.2
+    container_name: hapi-fhir-sincelejo
     depends_on:
-      hapi-db:
+      hapi-db-sincelejo:
         condition: service_healthy
     ports:
-      - "8080:8080"
-    volumes:
-      - ./hapi-config:/data/hapi
-      - ./hapi-extra-classes:/app/extra-classes
+      - "8082:8080"
     environment:
-      SPRING_CONFIG_LOCATION: 'file:///data/hapi/application.yaml'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://hapi-db-sincelejo:5432/hapi_sincelejo'
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: 'ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect'
       HAPI_FHIR_FHIR_VERSION: R4
-    networks:
-      - clinica-net
+    networks: [clinica-net]
 
+  # ========== SEDE CARTAGENA ==========
+  hapi-db-cartagena:
+    image: postgres:14
+    container_name: hapi-db-cartagena
+    environment:
+      POSTGRES_DB: hapi_cartagena
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - hapi-db-cartagena-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d hapi_cartagena"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [clinica-net]
+
+  hapi-fhir-cartagena:
+    image: hapiproject/hapi:v5.5.2
+    container_name: hapi-fhir-cartagena
+    depends_on:
+      hapi-db-cartagena:
+        condition: service_healthy
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://hapi-db-cartagena:5432/hapi_cartagena'
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: 'ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect'
+      HAPI_FHIR_FHIR_VERSION: R4
+    networks: [clinica-net]
+
+  # ========== SEDE COROZAL ==========
+  hapi-db-corozal:
+    image: postgres:14
+    container_name: hapi-db-corozal
+    environment:
+      POSTGRES_DB: hapi_corozal
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - hapi-db-corozal-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d hapi_corozal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [clinica-net]
+
+  hapi-fhir-corozal:
+    image: hapiproject/hapi:v5.5.2
+    container_name: hapi-fhir-corozal
+    depends_on:
+      hapi-db-corozal:
+        condition: service_healthy
+    ports:
+      - "8084:8080"
+    environment:
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://hapi-db-corozal:5432/hapi_corozal'
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: 'ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect'
+      HAPI_FHIR_FHIR_VERSION: R4
+    networks: [clinica-net]
+
+  # ========== REDIS ==========
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    networks: [clinica-net]
+
+  # ========== KEYCLOAK ==========
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
     container_name: keycloak
@@ -44,27 +119,32 @@ services:
       - "8081:8080"
     volumes:
       - ./keycloak/realm.json:/opt/keycloak/data/import/realm.json
-    networks:
-      - clinica-net
+    networks: [clinica-net]
 
+  # ========== BUS / HSB ==========
   bus:
     build:
       context: ./bus
       dockerfile: Dockerfile
     container_name: bus
     depends_on:
-      - hapi-fhir
+      - hapi-fhir-sincelejo
+      - hapi-fhir-cartagena
+      - hapi-fhir-corozal
       - keycloak
+      - redis
     ports:
       - "8000:8000"
     environment:
-      # Aquí el bus apunta a los nombres de los contenedores, no a localhost
-      - FHIR_URL=http://hapi-fhir:8080/fhir
       - KEYCLOAK_URL=http://keycloak:8080
-      - FHIR_BASE_URL=http://hapi-fhir:8080/fhir
-    networks:
-      - clinica-net
+      - FHIR_SINCELEJO=http://hapi-fhir-sincelejo:8080/fhir
+      - FHIR_CARTAGENA=http://hapi-fhir-cartagena:8080/fhir
+      - FHIR_COROZAL=http://hapi-fhir-corozal:8080/fhir
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks: [clinica-net]
 
+  # ========== FRONTEND ==========
   frontend:
     build:
       context: ./frontend
@@ -74,11 +154,12 @@ services:
       - "3000:80"
     depends_on:
       - bus
-    networks:
-      - clinica-net
+    networks: [clinica-net]
 
 volumes:
-  hapi-db-data:
+  hapi-db-sincelejo-data:
+  hapi-db-cartagena-data:
+  hapi-db-corozal-data:
 
 networks:
   clinica-net:
