@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+hl7apy
+fastapi-idempotency
+auditchain[postgres]
+asyncpg
+httpx
+pandas
+python-multipart
+requests
+python-jose[cryptography]
+prometheus-fastapi-instrumentator
