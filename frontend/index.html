@@ -10,66 +10,129 @@
 <body>
   <header>
     <h1>🏥 Historia Clínica Distribuida</h1>
-    <div id="user-info">
+    <div id="user-info" style="display:none;">
       <span id="username"></span>
+      <span id="role-badge" class="badge"></span>
       <button id="logout-btn" onclick="logout()">Cerrar sesión</button>
     </div>
   </header>
 
   <div id="login-section">
-    <h2>Iniciar sesión</h2>
-    <p>Usa uno de los usuarios de prueba:</p>
-    <ul>
-      <li><strong>Paciente:</strong> paciente1 / paciente123</li>
-      <li><strong>Admisionista:</strong> admision1 / admision123</li>
-      <li><strong>Médico:</strong> medico1 / medico123</li>
-      <li><strong>Auditor:</strong> auditor1 / auditor123</li>
-    </ul>
-    <button onclick="login()">Iniciar sesión con Keycloak</button>
+    <div class="login-card">
+      <h2>Iniciar sesión</h2>
+      <p>Usa uno de los usuarios de prueba:</p>
+      <table class="users-table">
+        <tr><th>Rol</th><th>Usuario</th><th>Contraseña</th></tr>
+        <tr><td>Paciente</td><td>paciente1</td><td>paciente123</td></tr>
+        <tr><td>Admisionista</td><td>admision1</td><td>admision123</td></tr>
+        <tr><td>Médico</td><td>medico1</td><td>medico123</td></tr>
+        <tr><td>Auditor</td><td>auditor1</td><td>auditor123</td></tr>
+      </table>
+      <button class="btn-primary" onclick="login()">Iniciar sesión con Keycloak</button>
+    </div>
   </div>
 
   <main id="app-section" style="display:none;">
-    <!-- Vista Paciente -->
-    <section id="vista-paciente" class="vista" style="display:none;">
-      <h2>Mi Historia Clínica</h2>
-      <p>Consulta tu historia unificada de las 3 sedes.</p>
-      <button onclick="cargarMiHistoria()">Ver mi historia</button>
-      <button onclick="descargarBundle()">Descargar Bundle FHIR</button>
-      <div id="historia-paciente"></div>
+    <!-- ========== VISTA PACIENTE ========== -->
+    <section id="vista-paciente" class="vista">
+      <h2>👤 Mi Historia Clínica</h2>
+      <p class="subtitle">Historia unificada de las 3 sedes: Sincelejo, Cartagena, Corozal</p>
+      <div class="actions">
+        <button class="btn-primary" onclick="cargarMiHistoria()">🔄 Ver mi historia</button>
+        <button class="btn-secondary" onclick="descargarBundle()">📥 Descargar Bundle FHIR</button>
+        <button class="btn-secondary" onclick="verAccesos()">🔍 ¿Quién accedió a mi historia?</button>
+      </div>
+      <div id="historia-paciente" class="resultado"></div>
+      <div id="accesos-paciente" class="resultado"></div>
     </section>
 
-    <!-- Vista Admisionista -->
-    <section id="vista-admisionista" class="vista" style="display:none;">
-      <h2>Admisión y Triage</h2>
-      <p>Buscar o registrar paciente, detectar duplicados, abrir atención con triage.</p>
-      <button onclick="listarPacientes()">Listar pacientes</button>
-      <div id="lista-pacientes"></div>
-      <h3>Estado de envío al bus</h3>
-      <div id="estado-bus"></div>
+    <!-- ========== VISTA ADMISIONISTA ========== -->
+    <section id="vista-admisionista" class="vista">
+      <h2>📋 Admisión y Triage</h2>
+      <p class="subtitle">Buscar, registrar y detectar duplicados entre sedes</p>
+
+      <div class="card">
+        <h3>Buscar paciente</h3>
+        <input id="buscar-doc" placeholder="Documento del paciente">
+        <select id="buscar-sede">
+          <option value="">Todas las sedes</option>
+          <option value="sincelejo">Sincelejo</option>
+          <option value="cartagena">Cartagena</option>
+          <option value="corozal">Corozal</option>
+        </select>
+        <button class="btn-primary" onclick="buscarPaciente()">🔍 Buscar</button>
+        <div id="resultado-busqueda" class="resultado"></div>
+      </div>
+
+      <div class="card">
+        <h3>Registrar paciente (HL7)</h3>
+        <input id="reg-doc" placeholder="Documento">
+        <input id="reg-nombre" placeholder="Nombre">
+        <input id="reg-apellido" placeholder="Apellido">
+        <select id="reg-sexo">
+          <option value="M">Masculino</option>
+          <option value="F">Femenino</option>
+        </select>
+        <input id="reg-fecha" placeholder="Fecha nacimiento (YYYYMMDD)" value="19900101">
+        <select id="reg-sede">
+          <option value="sincelejo">Sincelejo</option>
+          <option value="cartagena">Cartagena</option>
+          <option value="corozal">Corozal</option>
+        </select>
+        <button class="btn-primary" onclick="registrarPaciente()">➕ Registrar</button>
+        <div id="resultado-registro" class="resultado"></div>
+      </div>
+
+      <div class="card">
+        <h3>Estado del bus y sedes</h3>
+        <button class="btn-secondary" onclick="cargarEstadoSedes()">🔄 Actualizar estado</button>
+        <div id="estado-sedes" class="resultado"></div>
+      </div>
     </section>
 
-    <!-- Vista Médico -->
-    <section id="vista-medico" class="vista" style="display:none;">
-      <h2>Historia Clínica (Médico)</h2>
-      <p>Consultar historia unificada, registrar diagnóstico CIE-10, prescribir, egreso.</p>
-      <button onclick="listarPacientes()">Listar pacientes</button>
-      <div id="lista-pacientes-medico"></div>
-      <h3>Registrar diagnóstico CIE-10</h3>
-      <input id="diag-patient" placeholder="Documento del paciente">
-      <input id="diag-code" placeholder="Código CIE-10 (ej. I10)">
-      <input id="diag-desc" placeholder="Descripción (ej. Hipertensión)">
-      <button onclick="registrarDiagnostico()">Registrar diagnóstico</button>
-      <div id="resultado-diagnostico"></div>
+    <!-- ========== VISTA MÉDICO ========== -->
+    <section id="vista-medico" class="vista">
+      <h2>👨‍⚕️ Historia Clínica Unificada</h2>
+      <p class="subtitle">Consulta unificada, diagnóstico CIE-10, prescripción y egreso</p>
+
+      <div class="card">
+        <h3>Consultar paciente</h3>
+        <input id="med-doc" placeholder="Documento del paciente">
+        <button class="btn-primary" onclick="cargarHistoriaUnificada()">🔄 Cargar historia unificada</button>
+        <div id="historia-unificada" class="resultado"></div>
+      </div>
+
+      <div class="card">
+        <h3>Registrar diagnóstico CIE-10</h3>
+        <input id="diag-patient" placeholder="Documento del paciente">
+        <input id="diag-code" placeholder="Código CIE-10 (ej. I10)">
+        <input id="diag-desc" placeholder="Descripción (ej. Hipertensión esencial)">
+        <select id="diag-sede">
+          <option value="sincelejo">Sincelejo</option>
+          <option value="cartagena">Cartagena</option>
+          <option value="corozal">Corozal</option>
+        </select>
+        <button class="btn-primary" onclick="registrarDiagnostico()">➕ Registrar diagnóstico</button>
+        <div id="resultado-diagnostico" class="resultado"></div>
+      </div>
     </section>
 
-    <!-- Vista Reporte de HC -->
-    <section id="vista-reporte" class="vista" style="display:none;">
-      <h2>Reporte de HC</h2>
-      <p>Reporte unificado por sede, sello de integridad, tablero de estado.</p>
-      <button onclick="cargarReporte()">Generar reporte</button>
-      <div id="reporte-contenido"></div>
+    <!-- ========== VISTA REPORTE ========== -->
+    <section id="vista-reporte" class="vista">
+      <h2>📊 Reporte de Historia Clínica</h2>
+      <p class="subtitle">Tablero de estado, auditoría y exportación</p>
+
+      <div class="actions">
+        <button class="btn-primary" onclick="cargarReporte()">🔄 Generar reporte</button>
+        <button class="btn-secondary" onclick="verificarAuditoria()">🔐 Verificar auditoría</button>
+      </div>
+
+      <div id="reporte-contenido" class="resultado"></div>
+      <div id="auditoria-contenido" class="resultado"></div>
     </section>
   </main>
+
+  <div id="toast" class="toast"></div>
 
   <script src="app.js"></script>
 </body>

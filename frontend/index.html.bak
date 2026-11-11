@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historia Clínica Distribuida</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/keycloak-js@24.0.0/dist/keycloak.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🏥 Historia Clínica Distribuida</h1>
+    <div id="user-info">
+      <span id="username"></span>
+      <button id="logout-btn" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <div id="login-section">
+    <h2>Iniciar sesión</h2>
+    <p>Usa uno de los usuarios de prueba:</p>
+    <ul>
+      <li><strong>Paciente:</strong> paciente1 / paciente123</li>
+      <li><strong>Admisionista:</strong> admision1 / admision123</li>
+      <li><strong>Médico:</strong> medico1 / medico123</li>
+      <li><strong>Auditor:</strong> auditor1 / auditor123</li>
+    </ul>
+    <button onclick="login()">Iniciar sesión con Keycloak</button>
+  </div>
+
+  <main id="app-section" style="display:none;">
+    <!-- Vista Paciente -->
+    <section id="vista-paciente" class="vista" style="display:none;">
+      <h2>Mi Historia Clínica</h2>
+      <p>Consulta tu historia unificada de las 3 sedes.</p>
+      <button onclick="cargarMiHistoria()">Ver mi historia</button>
+      <button onclick="descargarBundle()">Descargar Bundle FHIR</button>
+      <div id="historia-paciente"></div>
+    </section>
+
+    <!-- Vista Admisionista -->
+    <section id="vista-admisionista" class="vista" style="display:none;">
+      <h2>Admisión y Triage</h2>
+      <p>Buscar o registrar paciente, detectar duplicados, abrir atención con triage.</p>
+      <button onclick="listarPacientes()">Listar pacientes</button>
+      <div id="lista-pacientes"></div>
+      <h3>Estado de envío al bus</h3>
+      <div id="estado-bus"></div>
+    </section>
+
+    <!-- Vista Médico -->
+    <section id="vista-medico" class="vista" style="display:none;">
+      <h2>Historia Clínica (Médico)</h2>
+      <p>Consultar historia unificada, registrar diagnóstico CIE-10, prescribir, egreso.</p>
+      <button onclick="listarPacientes()">Listar pacientes</button>
+      <div id="lista-pacientes-medico"></div>
+      <h3>Registrar diagnóstico CIE-10</h3>
+      <input id="diag-patient" placeholder="Documento del paciente">
+      <input id="diag-code" placeholder="Código CIE-10 (ej. I10)">
+      <input id="diag-desc" placeholder="Descripción (ej. Hipertensión)">
+      <button onclick="registrarDiagnostico()">Registrar diagnóstico</button>
+      <div id="resultado-diagnostico"></div>
+    </section>
+
+    <!-- Vista Reporte de HC -->
+    <section id="vista-reporte" class="vista" style="display:none;">
+      <h2>Reporte de HC</h2>
+      <p>Reporte unificado por sede, sello de integridad, tablero de estado.</p>
+      <button onclick="cargarReporte()">Generar reporte</button>
+      <div id="reporte-contenido"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
