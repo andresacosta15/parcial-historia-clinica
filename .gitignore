@@ -27,3 +27,12 @@ application.yam
 application.yaml
 hapi-libs/
 .~lock.*#
+
+# Basura del proyecto
+bus/audit.db
+bus/__pycache__/
+**/__pycache__/
+*.pyc
+*.save
+application.yam
+hapi-libs/
