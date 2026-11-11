@@ -1,0 +1,20 @@
+@startuml
+actor Médico
+participant "Frontend" as F
+participant "Bus (HSB)" as B
+participant "HAPI FHIR (Sincelejo)" as H1
+participant "HAPI FHIR (Cartagena)" as H2
+participant "HAPI FHIR (Corozal)" as H3
+
+Médico -> F: Consultar paciente (doc: 99999999)
+F -> B: GET /patients/99999999/bundle (JWT)
+B -> H1: GET /Patient?identifier=99999999
+B -> H2: GET /Patient?identifier=99999999
+B -> H3: GET /Patient?identifier=99999999
+H1 --> B: Bundle (Patient, Encounter)
+H2 --> B: Bundle (Patient, Encounter)
+H3 --> B: Bundle (Patient, Encounter)
+B -> B: Fusionar resultados
+B --> F: JSON Unificado (3 sedes)
+F --> Médico: Mostrar historia clínica completa
+@enduml

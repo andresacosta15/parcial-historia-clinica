@@ -1,0 +1,26 @@
+@startuml
+left to right direction
+actor "Paciente" as P
+actor "Admisionista" as A
+actor "Médico" as M
+actor "Auditor" as Au
+
+rectangle "Plataforma de Interoperabilidad Clínica" {
+  usecase "Ver historia unificada" as UC1
+  usecase "Descargar Bundle FHIR" as UC2
+  usecase "Buscar/Registrar paciente" as UC3
+  usecase "Detectar duplicados" as UC4
+  usecase "Registrar diagnóstico CIE-10" as UC5
+  usecase "Generar reporte unificado" as UC6
+  usecase "Verificar auditoría" as UC7
+}
+
+P --> UC1
+P --> UC2
+A --> UC3
+A --> UC4
+M --> UC1
+M --> UC5
+Au --> UC6
+Au --> UC7
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+[*] --> RECIBIDO : Mensaje HL7/CSV
+RECIBIDO --> VALIDADO : Sintaxis OK
+VALIDADO --> ENCOLADO : Esperando sede
+ENCOLADO --> ENVIADO : Sede disponible
+ENVIADO --> COMPLETADO : HAPI responde 201
+ENVIADO --> FALLIDO : HAPI no responde
+FALLIDO --> REINTENTADO : Worker de Redis
+REINTENTADO --> ENVIADO : Reintento exitoso
+REINTENTADO --> MUERTO : 3 intentos fallidos
+COMPLETADO --> [*]
+MUERTO --> [*]
+@enduml

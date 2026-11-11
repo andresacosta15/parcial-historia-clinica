@@ -1,0 +1,29 @@
+@startuml
+class Patient {
+  + String id
+  + String identifier
+  + String name
+  + String gender
+  + Date birthDate
+}
+class Encounter {
+  + String id
+  + String status
+  + String subject
+}
+class Condition {
+  + String id
+  + String code (CIE-10)
+  + String clinicalStatus
+}
+class AuditLog {
+  + String id
+  + String timestamp
+  + String actor
+  + String action
+  + String prev_hash
+  + String hash
+}
+Patient "1" -- "*" Encounter
+Patient "1" -- "*" Condition
+@enduml
