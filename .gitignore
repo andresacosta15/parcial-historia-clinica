@@ -36,3 +36,4 @@ bus/__pycache__/
 *.save
 application.yam
 hapi-libs/
+*.bak
